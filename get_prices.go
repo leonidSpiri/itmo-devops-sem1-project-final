@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"net/http"
 	"time"
+	"strconv"
 )
 
 func (h *pricesHandler) handleGetPrices(w http.ResponseWriter, r *http.Request) {
@@ -84,7 +85,7 @@ func buildZipWithCSV(records []exportRecord) ([]byte, error) {
 			r.Name,
 			r.Category,
 			r.Price,
-			r.CreateDate.Format("2006-01-02"),
+			r.CreateDate.Format("2026-01-01"),
 		}); err != nil {
 			return nil, fmt.Errorf("write csv row: %w", err)
 		}

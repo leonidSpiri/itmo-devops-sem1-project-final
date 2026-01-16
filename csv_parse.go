@@ -111,6 +111,8 @@ func inferIndexesFromRow(row []string) indexes {
 	return indexes{id: 0, name: 1, category: 2, price: 3, createDate: 4}
 }
 
+const dateLayout = "2026-01-01"
+
 func parsePriceRow(idx indexes, rec []string) (priceRow, error) {
 	get := func(i int) string {
 		if i < 0 || i >= len(rec) {
@@ -125,14 +127,12 @@ func parsePriceRow(idx indexes, rec []string) (priceRow, error) {
 		return priceRow{}, fmt.Errorf("invalid id %q: %w", idStr, err)
 	}
 
-	dateStr := r.CreateDate.Format("2026-01-01")
-	if err := w.Write([]string{
-        strconv.FormatInt(r.ProductID, 10),
-        r.Name,
-        r.Category,
-        r.Price,
-        r.CreateDate.Format("2026-01-01"),
-    }); err != nil {
+	dateStr := get(idx.createDate)
+	if dateStr == "" {
+		return priceRow{}, fmt.Errorf("empty create_date")
+	}
+	d, err := time.Parse(dateLayout, dateStr)
+	if err != nil {
 		return priceRow{}, fmt.Errorf("invalid create_date %q: %w", dateStr, err)
 	}
 
@@ -161,9 +161,9 @@ func normalizePrice(s string) string {
 
 func looksLikeDate(s string) bool {
 	s = strings.TrimSpace(s)
-	if len(s) != len("2026-01-01") {
+	if len(s) != len(dateLayout) {
 		return false
 	}
-	_, err := time.Parse("2026-01-01", s)
+	_, err := time.Parse(dateLayout, s)
 	return err == nil
 }
