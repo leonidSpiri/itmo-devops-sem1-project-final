@@ -85,7 +85,7 @@ func buildZipWithCSV(records []exportRecord) ([]byte, error) {
 			r.Name,
 			r.Category,
 			r.Price,
-			r.CreateDate.Format("2026-01-01"),
+			r.CreateDate.Format("2006-01-02"),
 		}); err != nil {
 			return nil, fmt.Errorf("write csv row: %w", err)
 		}

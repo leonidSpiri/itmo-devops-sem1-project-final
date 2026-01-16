@@ -111,7 +111,7 @@ func inferIndexesFromRow(row []string) indexes {
 	return indexes{id: 0, name: 1, category: 2, price: 3, createDate: 4}
 }
 
-const dateLayout = "2026-01-01"
+const dateLayout = "2006-01-02"
 
 func parsePriceRow(idx indexes, rec []string) (priceRow, error) {
 	get := func(i int) string {
