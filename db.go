@@ -31,12 +31,14 @@ func openDB(cfg config) (*sql.DB, error) {
 func ensureSchema(ctx context.Context, db *sql.DB) error {
 	const q = `
 CREATE TABLE IF NOT EXISTS prices (
-	id           BIGINT      NOT NULL,
-	create_date  DATE        NOT NULL,
-	name         TEXT        NOT NULL,
-	category     TEXT        NOT NULL,
-	price        NUMERIC     NOT NULL
+  id SERIAL PRIMARY KEY,
+  product_id BIGINT NOT NULL,
+  name VARCHAR(255) NOT NULL,
+  category VARCHAR(255) NOT NULL,
+  price DECIMAL(10,2) NOT NULL,
+  create_date TIMESTAMP NOT NULL
 );
+
 `
 	if _, err := db.ExecContext(ctx, q); err != nil {
 		return fmt.Errorf("create table prices: %w", err)

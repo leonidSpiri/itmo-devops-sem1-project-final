@@ -73,38 +73,43 @@ ORDER BY product_id, create_date, name, category;
 
 func buildZipWithCSV(records []exportRecord) ([]byte, error) {
 	var csvBuf bytes.Buffer
-	w := csv.NewWriter(&csvBuf)
+	cw := csv.NewWriter(&csvBuf)
 
-	if err := w.Write([]string{"id", "name", "category", "price", "create_date"}); err != nil {
+	if err := cw.Write([]string{"id", "name", "category", "price", "create_date"}); err != nil {
 		return nil, fmt.Errorf("write csv header: %w", err)
 	}
 	for _, r := range records {
-		if err := w.Write([]string{
-			fmt.Sprintf("%d", r.ID),
+		if err := cw.Write([]string{
+			strconv.FormatInt(r.ProductID, 10),
 			r.Name,
 			r.Category,
-			r.PriceText,
-			r.CreateDate,
+			r.Price,
+			r.CreateDate.Format("2006-01-02"),
 		}); err != nil {
 			return nil, fmt.Errorf("write csv row: %w", err)
 		}
 	}
-	w.Flush()
-	if err := w.Error(); err != nil {
+
+	cw.Flush()
+	if err := cw.Error(); err != nil {
 		return nil, fmt.Errorf("flush csv: %w", err)
 	}
 
 	var zipBuf bytes.Buffer
 	zw := zip.NewWriter(&zipBuf)
+
 	f, err := zw.Create("data.csv")
 	if err != nil {
 		return nil, fmt.Errorf("create zip entry: %w", err)
 	}
+
 	if _, err := f.Write(csvBuf.Bytes()); err != nil {
 		return nil, fmt.Errorf("write zip entry: %w", err)
 	}
+
 	if err := zw.Close(); err != nil {
 		return nil, fmt.Errorf("close zip: %w", err)
 	}
+
 	return zipBuf.Bytes(), nil
 }

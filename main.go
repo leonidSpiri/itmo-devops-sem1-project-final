@@ -41,20 +41,29 @@ func main() {
 		IdleTimeout:       60 * time.Second,
 	}
 
-	go func() {
-		log.Printf("listening on %s", cfg.httpAddr())
-		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("http server failed: %v", err)
-		}
-	}()
+errCh := make(chan error, 1)
 
-	stop := make(chan os.Signal, 1)
-	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)
-	<-stop
+go func() {
+    log.Printf("listening on %s", cfg.httpAddr())
+    if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+        errCh <- err
+    }
+}()
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	_ = srv.Shutdown(ctx)
+stop := make(chan os.Signal, 1)
+signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)
+
+select {
+case sig := <-stop:
+    log.Printf("signal: %v", sig)
+case err := <-errCh:
+    log.Printf("http server failed: %v", err)
+}
+
+ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+defer cancel()
+_ = srv.Shutdown(ctx)
+
 }
 
 type pricesHandler struct {
