@@ -35,11 +35,11 @@ done
 echo "[prepare] ensuring table prices exists"
 psql -h "$POSTGRES_HOST" -p "$POSTGRES_PORT" -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v ON_ERROR_STOP=1 <<'SQL'
 CREATE TABLE IF NOT EXISTS prices (
-  id           BIGINT  NOT NULL,
-  create_date  DATE    NOT NULL,
-  name         TEXT    NOT NULL,
-  category     TEXT    NOT NULL,
-  price        NUMERIC NOT NULL
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  category VARCHAR(255) NOT NULL,
+  price DECIMAL(10,2) NOT NULL,
+  create_date TIMESTAMP NOT NULL
 );
 SQL
 

@@ -11,8 +11,7 @@ import (
 )
 
 func (h *pricesHandler) handleGetPrices(w http.ResponseWriter, r *http.Request) {
-	ctx, cancel := context.WithTimeout(r.Context(), 30*time.Second)
-	defer cancel()
+	ctx := r.Context()
 
 	recs, err := h.loadPricesForExport(ctx)
 	if err != nil {
@@ -33,33 +32,35 @@ func (h *pricesHandler) handleGetPrices(w http.ResponseWriter, r *http.Request) 
 }
 
 type exportRecord struct {
-	ID         int64
-	Name       string
-	Category   string
-	PriceText  string
-	CreateDate string
+	ProductID   int64
+	Name        string
+	Category    string
+	Price       string
+	CreateDate  time.Time
 }
+
 
 func (h *pricesHandler) loadPricesForExport(ctx context.Context) ([]exportRecord, error) {
 	rows, err := h.db.QueryContext(ctx, `
 SELECT
-	id,
-	name,
-	category,
-	price::text,
-	to_char(create_date, 'YYYY-MM-DD')
+  product_id,
+  name,
+  category,
+  price,
+  create_date
 FROM prices
-ORDER BY id, create_date, name, category;
+ORDER BY product_id, create_date, name, category;
+
 `)
 	if err != nil {
 		return nil, fmt.Errorf("select prices: %w", err)
 	}
 	defer rows.Close()
 
-	out := make([]exportRecord, 0, 1024)
+	var out []exportRecord
 	for rows.Next() {
 		var r exportRecord
-		if err := rows.Scan(&r.ID, &r.Name, &r.Category, &r.PriceText, &r.CreateDate); err != nil {
+        if err := rows.Scan(&r.ProductID, &r.Name, &r.Category, &r.Price, &r.CreateDate); err != nil {
 			return nil, fmt.Errorf("scan row: %w", err)
 		}
 		out = append(out, r)

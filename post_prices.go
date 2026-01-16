@@ -42,8 +42,7 @@ func (h *pricesHandler) handlePostPrices(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	ctx, cancel := context.WithTimeout(r.Context(), 30*time.Second)
-	defer cancel()
+	ctx := r.Context()
 
 	resp, err := h.insertAndStats(ctx, rows)
 	if err != nil {
@@ -57,12 +56,9 @@ func (h *pricesHandler) handlePostPrices(w http.ResponseWriter, r *http.Request)
 }
 
 func readArchiveFromRequest(r *http.Request) ([]byte, error) {
-	const maxBody = 50 << 20
 
-	ct := r.Header.Get("Content-Type")
-	mediaType, _, _ := mime.ParseMediaType(ct)
-
-	if strings.HasPrefix(mediaType, "multipart/") {
+	mediaType, _, _ := mime.ParseMediaType(r.Header.Get("Content-Type"))
+    if mediaType == "multipart/form-data" {
 		if err := r.ParseMultipartForm(maxBody); err != nil {
 			return nil, fmt.Errorf("parse multipart: %w", err)
 		}
@@ -118,10 +114,11 @@ func (h *pricesHandler) insertAndStats(ctx context.Context, rows []priceRow) (po
 	resp := postPricesResponse{}
 	q := `
 SELECT
-	COUNT(*)::bigint AS total_items,
-	COUNT(DISTINCT category)::bigint AS total_categories,
-	COALESCE(SUM(price), 0)::float8 AS total_price
+  COUNT(*) AS total_items,
+  COUNT(DISTINCT category) AS total_categories,
+  COALESCE(SUM(price), 0) AS total_price
 FROM prices;
+
 `
 	if err := tx.QueryRowContext(ctx, q).Scan(&resp.TotalItems, &resp.TotalCategories, &resp.TotalPrice); err != nil {
 		return postPricesResponse{}, fmt.Errorf("select stats: %w", err)

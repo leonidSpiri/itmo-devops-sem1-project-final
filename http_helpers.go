@@ -5,6 +5,8 @@ import (
 	"net/http"
 )
 
+const maxUploadSize = 50 << 20
+
 type apiError struct {
 	Error string `json:"error"`
 }

@@ -125,9 +125,14 @@ func parsePriceRow(idx indexes, rec []string) (priceRow, error) {
 		return priceRow{}, fmt.Errorf("invalid id %q: %w", idStr, err)
 	}
 
-	dateStr := get(idx.createDate)
-	d, err := time.Parse("2006-01-02", dateStr)
-	if err != nil {
+	dateStr := r.CreateDate.Format("2026-01-01")
+	if err := w.Write([]string{
+        strconv.FormatInt(r.ProductID, 10),
+        r.Name,
+        r.Category,
+        r.Price,
+        r.CreateDate.Format("2026-01-01"),
+    }); err != nil {
 		return priceRow{}, fmt.Errorf("invalid create_date %q: %w", dateStr, err)
 	}
 
